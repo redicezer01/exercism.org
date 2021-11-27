@@ -1,0 +1,91 @@
+package tournament
+
+import "io"
+import "fmt"
+import _ "errors"
+import "strings"
+
+const bToRead = 100
+
+type ScoreRecord struct {
+	MP int
+	W  int
+	D  int
+	L  int
+	P  int
+}
+
+// Score Board
+var ScoreB= map[string]*ScoreRecord{}
+
+func Tally(reader io.Reader, writer io.Writer) error {
+	bchunk:= make([]byte, bToRead)
+	bline := make([]rune, bToRead)
+	newLine := '\n'
+
+	
+
+	for i := 0; i < 1; i++ {
+		_, err:= reader.Read(bchunk)
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return err
+		}
+		pos := 0	
+		for _, c := range string(bchunk) {
+			if c == newLine {
+				splited := strings.Split(string(bline), ";")
+				bline = bline[:1]
+				if len(splited) < 3 {
+					continue
+				}
+				processScoreB(strings.Trim(splited[0]," "), strings.Trim(splited[1]," "), strings.Trim(splited[2]," "))
+				
+				bchunk = bchunk[pos:]
+				fmt.Println(string(bchunk))
+				continue
+			}
+			bline = append(bline, c)	
+			pos++
+		}
+		
+	}
+	
+	for k, v := range ScoreB {
+		fmt.Println(k, v)
+	}
+
+	return nil
+}
+
+func processScoreB(team1, team2, res string) {
+	t1, ok := ScoreB[team1]
+	if !ok {
+		t1 = &ScoreRecord{}
+		ScoreB[team1] = t1 		
+	}
+	t1.MP += 1
+		
+	t2, ok := ScoreB[team2]
+	if !ok {
+		t2 = &ScoreRecord{}
+		ScoreB[team2] = t2 		
+	}
+	t2.MP += 1
+	//fmt.Println("res", res)
+	switch res {
+	case "win":
+		t1.W += 1	
+		t2.L += 1
+	case "loss":
+		t1.L += 1
+		t2.W += 1
+	case "draw":
+		t1.D += 1
+		t2.D += 1
+	}
+	//fmt.Println(team1, t1)
+	//fmt.Println(team2, t2)
+	//fmt.Println()
+}
